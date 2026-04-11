@@ -1,0 +1,25 @@
+{
+  "name": "mcp-redmine-agile",
+  "version": "1.0.0",
+  "description": "MCP server for Redmine Agile - Scrum/Sprint management for AI agents",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "mcp",
+    "redmine",
+    "agile",
+    "scrum"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "axios": "^1.13.6",
+    "dotenv": "^17.3.1",
+    "js-yaml": "^4.1.1"
+  }
+}
