@@ -32,6 +32,7 @@ import * as sprintHealth from './tools/sprintHealth.js';
 import * as planSprint from './tools/planSprint.js';
 import * as updateIssue from './tools/updateIssue.js';
 import * as getProjectMembers from './tools/getProjectMembers.js';
+import * as getTimeEntries from './tools/getTimeEntries.js';
 
 
 // New advanced tools
@@ -58,6 +59,7 @@ const TOOLS = [
   sprintAnomalyDetection,
   updateIssue,
   getProjectMembers,
+  getTimeEntries,
 ];
 
 const toolMap = new Map(TOOLS.map((t) => [t.definition.name, t.handler]));

@@ -1,0 +1,11 @@
+{
+  "issue": {
+    "project_id": 452,
+    "subject": "Test Curl with File",
+    "tracker_id": 45,
+    "custom_fields": [
+      { "id": 64, "value": "N/A" },
+      { "id": 49, "value": "N/A" }
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 # Redmine Agile MCP Server
 
-An **MCP (Model Context Protocol) server** that lets AI agents manage Redmine Agile projects — sprints, backlog, and issues — through structured tools.
+An **MCP (Model Context Protocol) server** that lets AI agents manage Redmine Agile projects — sprints, backlog, issues, and time tracking — through structured tools.
 
 ---
 
@@ -8,9 +8,9 @@ An **MCP (Model Context Protocol) server** that lets AI agents manage Redmine Ag
 
 This server provides comprehensive control over Redmine Agile issues:
 
-*   **Create (C)**: Create new issues using `create_issue`.
-*   **Read (R)**: Retrieve sprints, issues, backlog, and advanced analytics.
-*   **Update (U)**: Modify any standard issue field (assignee, priority, status, dates, parent, etc.) using `update_issue`, or specific Agile actions like `move_issue_to_sprint`.
+*   **Create (C)**: Create new issues with sprint assignment, custom fields, and parent tasks using `create_issue`.
+*   **Read (R)**: Retrieve sprints, issues, backlog, project members, spent time entries (`get_time_entries`), and advanced analytics.
+*   **Update (U)**: Modify any standard issue field (assignee, priority, status, dates, parent, custom fields, etc.) using `update_issue`, or specific Agile actions like `move_issue_to_sprint` and `update_issue_status`.
 *   **Delete (D)**: **Disabled** by design for security and to prevent accidental data loss through AI interactions.
 
 ---
@@ -85,9 +85,10 @@ mcp-redmine/
 │   ├── getCurrentSprint.js    # Detect active sprint
 │   ├── getSprintIssues.js     # Get issues in a sprint (inc. Parent Info)
 │   ├── getBacklog.js          # Get backlog (inc. Parent Info)
-│   ├── createIssue.js         # Create a new issue
+│   ├── createIssue.js         # Create a new issue (inc. Sprint & Custom Fields)
 │   ├── updateIssue.js         # Generic issue update (Standard Fields)
 │   ├── getProjectMembers.js   # Find users in a project
+│   ├── getTimeEntries.js      # Fetch logged time entries & spent hours
 │   ├── moveIssueToSprint.js   # Move an issue to a specific sprint
 │   ├── updateIssueStatus.js   # Quickly change issue status/notes
 │   ├── sprintSummary.js       # Sprint stats (todo/doing/done)
@@ -114,6 +115,7 @@ mcp-redmine/
 | `create_issue` | Create a new Redmine issue | ✅ Create |
 | `update_issue` | Update ANY standard field (assignee, priority, dates, etc.) | ✅ Update |
 | `get_project_members` | List project members to find user IDs | ✅ Read |
+| `get_time_entries` | Retrieve spent time entries (logged hours & comments) | ✅ Read |
 | `move_issue_to_sprint` | Move an issue to a specific sprint | ✅ Update |
 | `update_issue_status` | Change status and add notes quickly | ✅ Update |
 | `sprint_summary` | Aggregate sprint stats by status | ✅ Read |
@@ -137,9 +139,32 @@ The server uses a smart resolution logic in `utils.js` that:
 - Handles partial sprint name matches (e.g., "13" -> "Sprint 13").
 - Ensures compatibility with Redmine Agile plugin filters (using `agile_sprints` technical filter).
 
+### Time & Effort Tracking
+The `get_time_entries` tool allows querying spent time logs for a project, specific issue, or team member across custom date ranges (`from` / `to`). It automatically resolves issue titles and calculates aggregate total hours logged.
+
 ---
 
-## Tool Reference (New Update Tool)
+## Tool Reference
+
+### `create_issue`
+
+Creates a new issue with optional sprint assignment and custom fields.
+
+```json
+{
+  "project_id": "mi-proyecto",
+  "subject": "Implementar módulo de reportes",
+  "tracker_id": 2,
+  "description": "Detalles sobre la tarea...",
+  "assigned_to_id": 384,
+  "estimated_hours": 8,
+  "sprint_id": "Sprint 15",
+  "parent_issue_id": 1020,
+  "custom_fields": [
+    { "id": 1, "value": "High Impact" }
+  ]
+}
+```
 
 ### `update_issue`
 
@@ -162,6 +187,20 @@ Supports updating any of the following fields:
 }
 ```
 
+### `get_time_entries`
+
+Retrieves spent time logs with optional issue, user, and date filtering:
+
+```json
+{
+  "project_id": "mi-proyecto",
+  "from": "2026-04-01",
+  "to": "2026-04-30",
+  "user_id": 384,
+  "limit": 50
+}
+```
+
 ---
 
 ## MCP Client Configuration
@@ -175,3 +214,4 @@ Standard MCP configuration applies for Claude Desktop, Cursor, and Antigravity. 
 - **Filter Logic**: Uses `f[]=agile_sprints` with numeric project IDs to ensure strict filtering in Agile boards.
 - **Hierarchies**: Parent-child relationships are fetched via extended issue subjects for bulk operations.
 - **Safety**: No deletion tools are implemented to protect project integrity.
+

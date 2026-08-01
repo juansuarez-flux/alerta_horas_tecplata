@@ -45,6 +45,22 @@ export const definition = {
         type: ['number', 'string'],
         description: 'Sprint ID or name to assign the issue to immediately (optional).',
       },
+      parent_issue_id: {
+        type: 'number',
+        description: 'ID of the parent issue (optional).',
+      },
+      custom_fields: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            value: { type: ['string', 'number', 'array'] },
+          },
+          required: ['id', 'value'],
+        },
+        description: 'Custom fields for the issue (optional).',
+      },
     },
     required: ['project_id', 'subject', 'tracker_id'],
   },
@@ -59,6 +75,8 @@ export async function handler({
   assigned_to_id,
   estimated_hours,
   sprint_id,
+  parent_issue_id,
+  custom_fields,
 }) {
   if (!project_id) throw new Error('project_id is required');
   if (!subject) throw new Error('subject is required');
@@ -76,6 +94,8 @@ export async function handler({
     ...(assigned_to_id && { assigned_to_id }),
     ...(estimated_hours && { estimated_hours }),
     ...(resolved_sprint_id && { sprint_id: resolved_sprint_id }),
+    ...(parent_issue_id && { parent_issue_id }),
+    ...(custom_fields && { custom_fields }),
   };
 
   const data = await post('/issues.json', { issue: issuePayload });
