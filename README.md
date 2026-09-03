@@ -18,6 +18,7 @@ This server provides comprehensive control over Redmine Agile issues:
 ## Prerequisites
 
 - Node.js 18+
+- Python 3.x *(required only for executive report generation via the Antigravity skill)*
 - Redmine instance with the **Redmine Agile** plugin
 - A Redmine API key with access to your project
 
@@ -36,6 +37,8 @@ cd mcp-redmine
 ```bash
 npm install
 ```
+
+> **Note**: The project includes the `docx` library to support Word report generation scripts located in the `scratch/` folder.
 
 ### 3. Configure environment variables
 
@@ -99,6 +102,14 @@ mcp-redmine/
 │   ├── sprint_prediction.js   # Velocity and predictions
 │   ├── sprintAnomalyDetection.js # Bottleneck detection
 │   └── utils.js               # Project/Sprint/Issue resolution logic
+├── scratch/             # Utility & development scripts (not part of the MCP server)
+│   ├── generate_general_monthly_doc.js  # Generate monthly Word report
+│   ├── generate_word_report.js          # Generate individual Word reports
+│   ├── generate_unified_word_report.js  # Unified multi-tracker report
+│   └── ...              # Analysis, testing, and exploration scripts
+├── .agents/             # Antigravity IDE customizations
+│   └── skills/
+│       └── redmine-executive-report/    # Skill for automated executive reports
 └── package.json         # Project configuration and scripts
 ```
 
@@ -203,6 +214,44 @@ Retrieves spent time logs with optional issue, user, and date filtering:
 
 ---
 
+## Utility Scripts (`scratch/`)
+
+The `scratch/` folder contains standalone Node.js scripts for development, analysis, and report generation. These scripts are **not part of the MCP server** but complement it:
+
+| Script | Description |
+|--------|-------------|
+| `generate_general_monthly_doc.js` | Generates a monthly consolidated executive report in Word format |
+| `generate_word_report.js` | Individual tracker Word report generator |
+| `generate_unified_word_report.js` | Unified multi-tracker Word report generator |
+| `generate_report_trackers_*.js` | Reports for specific tracker combinations |
+| `analyze_sprint_*.js` | Sprint analysis scripts |
+| `calculate_metrics.js` | Sprint metrics calculation |
+| `get_time_entries.js` | Quick CLI for querying time entries |
+| `test_*.js` | Integration and functional test scripts |
+
+> These scripts use the `docx` library (included in `package.json`) and interact directly with the Redmine API via environment variables.
+
+---
+
+## Antigravity IDE Integration
+
+The `.agents/skills/` folder contains a custom **Antigravity IDE skill** that automates executive report generation:
+
+### `redmine-executive-report` Skill
+
+Automates the creation of consolidated executive Word reports (`.docx`) from Redmine Spent Time entries. When triggered from Antigravity IDE, the skill:
+
+1. Queries `get_time_entries` for specified issue IDs and date ranges.
+2. Consolidates hours by developer and activity type (Development, Analysis, Diagnostics, Other).
+3. Generates a transparent pie chart using a Python helper script.
+4. Compiles a formatted `.docx` report using `build_report.js`.
+
+**Output naming convention**: `Resumen_Ejecutivo_Horas_Soporte_<Mes>_<Año>.docx`
+
+> This skill requires **Python 3.x** installed on the system for chart generation.
+
+---
+
 ## MCP Client Configuration
 
 Standard MCP configuration applies for Claude Desktop, Cursor, and Antigravity. Refer to the specific client documentation for adding the server via `node server.js`.
@@ -214,4 +263,3 @@ Standard MCP configuration applies for Claude Desktop, Cursor, and Antigravity. 
 - **Filter Logic**: Uses `f[]=agile_sprints` with numeric project IDs to ensure strict filtering in Agile boards.
 - **Hierarchies**: Parent-child relationships are fetched via extended issue subjects for bulk operations.
 - **Safety**: No deletion tools are implemented to protect project integrity.
-

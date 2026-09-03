@@ -9,3 +9,9 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Utility & development scripts (not part of the MCP server)
+scratch/
+
+# Generated reports and output files
+*.pdf
