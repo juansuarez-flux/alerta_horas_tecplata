@@ -1,5 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');
 
 // Robust dynamic loader for docx library
 let docxModule;
@@ -7,8 +12,8 @@ try {
   docxModule = await import('docx');
 } catch {
   const candidates = [
-    path.join(process.cwd(), 'node_modules', 'docx', 'dist', 'index.mjs'),
-    path.join('c:/Users/LENOVO/Documents/mcp-redmine', 'node_modules', 'docx', 'dist', 'index.mjs')
+    path.join(projectRoot, 'node_modules', 'docx', 'dist', 'index.mjs'),
+    path.join(process.cwd(), 'node_modules', 'docx', 'dist', 'index.mjs')
   ];
   for (const cand of candidates) {
     if (fs.existsSync(cand)) {
@@ -70,7 +75,7 @@ function createHeaderCell(text, widthPercent = null) {
       left: { style: BorderStyle.SINGLE, size: 1, color: COLOR_PRIMARY },
       right: { style: BorderStyle.SINGLE, size: 1, color: COLOR_PRIMARY },
     },
-    margins: { top: 120, bottom: 120, left: 140, right: 140 },
+    margins: { top: 140, bottom: 140, left: 140, right: 140 },
     ...(widthPercent ? { width: { size: widthPercent, type: WidthType.PERCENTAGE } } : {}),
   });
 }
@@ -98,7 +103,7 @@ function createSubHeaderCell(text, widthPercent = null) {
       left: { style: BorderStyle.SINGLE, size: 1, color: COLOR_SECONDARY },
       right: { style: BorderStyle.SINGLE, size: 1, color: COLOR_SECONDARY },
     },
-    margins: { top: 100, bottom: 100, left: 120, right: 120 },
+    margins: { top: 120, bottom: 120, left: 140, right: 140 },
     ...(widthPercent ? { width: { size: widthPercent, type: WidthType.PERCENTAGE } } : {}),
   });
 }
@@ -128,6 +133,7 @@ function createCell(text, options = {}) {
           }),
         ],
         alignment: align,
+        spacing: { line: 260, after: 40 },
       }),
     ],
     shading: bg ? { fill: bg, type: ShadingType.CLEAR } : undefined,
@@ -137,7 +143,7 @@ function createCell(text, options = {}) {
       left: { style: BorderStyle.SINGLE, size: 1, color: COLOR_BORDER },
       right: { style: BorderStyle.SINGLE, size: 1, color: COLOR_BORDER },
     },
-    margins: { top: 100, bottom: 100, left: 120, right: 120 },
+    margins: { top: 120, bottom: 120, left: 140, right: 140 },
     ...(widthPercent ? { width: { size: widthPercent, type: WidthType.PERCENTAGE } } : {}),
   });
 }
@@ -300,14 +306,31 @@ export async function buildReport(reportData, outputPath) {
   ];
 
   for (const m of reportData.members_breakdown) {
+    const trackerDisplay = m.tracker_label 
+      ? m.tracker_label 
+      : (Array.isArray(m.tracker_ids) 
+          ? (m.tracker_ids.length > 1 ? `${m.tracker_ids.length} Tareas (#${m.tracker_ids.join(', #')})` : `Tarea #${m.tracker_ids[0]}`)
+          : `Tarea #${m.tracker_id}`);
+
+    let memberFocus = m.focus || m.description;
+    if (!memberFocus || typeof memberFocus !== 'string' || memberFocus.trim().length === 0) {
+      const associatedTasks = (reportData.trackers_details || [])
+        .filter(t => t.assigned_to === m.name || (t.entries || []).some(e => e.author === m.name))
+        .map(t => t.raw_subject || t.title)
+        .filter(Boolean);
+      memberFocus = associatedTasks.length > 0 
+        ? associatedTasks.slice(0, 3).join(', ') 
+        : `Soporte técnico y tareas asociadas (${m.tracker_ids ? m.tracker_ids.length : 1} tareas)`;
+    }
+
     memberRows.push(
       new TableRow({
         children: [
           createCell(m.name, { bold: true, widthPercent: 25 }),
-          createCell(`Tarea #${m.tracker_id}`, { align: AlignmentType.CENTER, widthPercent: 20 }),
+          createCell(trackerDisplay, { align: AlignmentType.CENTER, widthPercent: 20 }),
           createCell(`${m.hours.toFixed(1)} hs`, { align: AlignmentType.CENTER, bold: true, widthPercent: 15 }),
           createCell(`${m.percent.toFixed(1)} %`, { align: AlignmentType.CENTER, widthPercent: 15 }),
-          createCell(m.focus, { widthPercent: 25 }),
+          createCell(memberFocus, { widthPercent: 25 }),
         ],
       })
     );
@@ -372,13 +395,31 @@ export async function buildReport(reportData, outputPath) {
   ];
 
   for (const act of reportData.activities_breakdown) {
+    let actDesc = act.description;
+    const isGeneric = !actDesc || typeof actDesc !== 'string' || actDesc.trim().length === 0 || actDesc.toLowerCase().startsWith('imputaciones registradas en');
+
+    if (isGeneric) {
+      // Build dynamic summary from associated tasks for this activity
+      const associatedTasks = (reportData.trackers_details || [])
+        .filter(t => (t.entries || []).some(e => e.activity === act.name || (act.name.includes('Desarrollo') && e.activity === 'Development') || (act.name.includes('Análisis') && e.activity === 'Analysis')))
+        .map(t => t.raw_subject || t.title)
+        .filter(Boolean);
+
+      const cleanTasks = [...new Set(associatedTasks)];
+      if (cleanTasks.length > 0) {
+        actDesc = cleanTasks.slice(0, 3).join(', ');
+      } else {
+        actDesc = `Actividades operativas y soporte en ${act.name.toLowerCase()}`;
+      }
+    }
+
     activityRows.push(
       new TableRow({
         children: [
           createCell(act.name, { bold: true, widthPercent: 30 }),
           createCell(`${act.hours.toFixed(1)} hs`, { align: AlignmentType.CENTER, bold: true, widthPercent: 20 }),
           createCell(`${act.percent.toFixed(1)} %`, { align: AlignmentType.CENTER, widthPercent: 20 }),
-          createCell(act.description, { widthPercent: 30 }),
+          createCell(actDesc, { widthPercent: 30 }),
         ],
       })
     );
@@ -470,7 +511,24 @@ export async function buildReport(reportData, outputPath) {
     })
   );
 
-  for (const c of (reportData.conclusions || [])) {
+  const rawConclusions = (reportData.conclusions || []).filter(
+    c => c && typeof c === 'object' && c.title && c.title !== 'undefined' && c.text && c.text !== 'undefined'
+  );
+
+  const conclusionsToRender = rawConclusions.length > 0
+    ? rawConclusions.slice(0, 6)
+    : [
+        {
+          title: 'Cumplimiento de Objetivos',
+          text: `Se atendieron ${reportData.metrics.trackers_count} tareas clave consolidadas totalizando ${reportData.metrics.total_hours.toFixed(1)} horas de dedicación.`
+        },
+        {
+          title: 'Continuidad Operativa',
+          text: 'Las intervenciones garantizan la estabilidad del servicio y el cumplimiento de las metas técnicas establecidas.'
+        }
+      ];
+
+  for (const c of conclusionsToRender) {
     children.push(
       new Paragraph({
         bullet: { level: 0 },

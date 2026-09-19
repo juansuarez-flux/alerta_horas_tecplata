@@ -92,6 +92,7 @@ mcp-redmine/
 │   ├── updateIssue.js         # Generic issue update (Standard Fields)
 │   ├── getProjectMembers.js   # Find users in a project
 │   ├── getTimeEntries.js      # Fetch logged time entries & spent hours
+│   ├── generateExecutiveReport.js # Generate Word report (.docx) with activity chart
 │   ├── moveIssueToSprint.js   # Move an issue to a specific sprint
 │   ├── updateIssueStatus.js   # Quickly change issue status/notes
 │   ├── sprintSummary.js       # Sprint stats (todo/doing/done)
@@ -127,6 +128,8 @@ mcp-redmine/
 | `update_issue` | Update ANY standard field (assignee, priority, dates, etc.) | ✅ Update |
 | `get_project_members` | List project members to find user IDs | ✅ Read |
 | `get_time_entries` | Retrieve spent time entries (logged hours & comments) | ✅ Read |
+| `get_executive_report_data` | Extract raw structured time & journal data for AI report synthesis | ✅ Read |
+| `compile_executive_report_docx` | Compile AI-synthesized report data into Word document (.docx) | ✅ Create/Report |
 | `move_issue_to_sprint` | Move an issue to a specific sprint | ✅ Update |
 | `update_issue_status` | Change status and add notes quickly | ✅ Update |
 | `sprint_summary` | Aggregate sprint stats by status | ✅ Read |
@@ -209,6 +212,56 @@ Retrieves spent time logs with optional issue, user, and date filtering:
   "to": "2026-04-30",
   "user_id": 384,
   "limit": 50
+}
+```
+
+### `get_executive_report_data` & `compile_executive_report_docx` (Executive AI Pipeline)
+
+This architecture leverages the native LLM intelligence of any MCP client (Claude Desktop, Cursor, Antigravity, etc.) to generate professional Word executive reports (`.docx`):
+
+1. **`get_executive_report_data`**: Fetches and aggregates raw spent time, journal deltas, and task metadata for single or multiple projects across date ranges.
+2. **AI LLM Synthesis**: The LLM analyzes raw developer comments, eliminates informal jargon, structures professional focus summaries per developer, activity breakdowns with concrete deliverables, and executive conclusions.
+3. **`compile_executive_report_docx`**: Compiles the synthesized payload into the final formatted Word `.docx` document complete with transparent Python charts.
+
+**Key Document Formatting & Layout Features:**
+- **Single or Multi-Project Consolidation:** Consolidates one or multiple projects into a single unified report.
+- **Dual Time Tracking:** Captures effort from both **Spent Time** (`spent_time`) and **Estimated Time** journal deltas (`estimated_hours`).
+- **Executive Typography & Spacing:** Includes generous paragraph line-spacing (1.15x), clean table cell padding (140 twips top/bottom), and dynamic fallbacks preventing empty cells or generic static texts.
+
+```json
+// Step 1: Call get_executive_report_data
+{
+  "project_id": ["soporte-l3-2025-2026-requerimientos", "soporte-l3-2025-2026-tareas"],
+  "from": "2026-09-01",
+  "to": "2026-09-17"
+}
+
+// Step 2: Call compile_executive_report_docx with the LLM-synthesized payload
+{
+  "report_data": {
+    "report_title": "Resumen Ejecutivo: Reporte de Horas y Actividades de Soporte L3",
+    "project_name": "Consolidado: Soporte L3",
+    "members_breakdown": [
+      {
+        "name": "Cristian Bova",
+        "tracker_label": "3 Tareas (#39077, #39165, #39292)",
+        "hours": 17.0,
+        "percent": 75.6,
+        "focus": "Certificados digitales, tokens, homologación FCE, validación EDI VERMAS..."
+      }
+    ],
+    "activities_breakdown": [
+      {
+        "name": "Desarrollo y Soporte Técnico",
+        "hours": 15.5,
+        "percent": 68.9,
+        "description": "Validación EDI VERMAS, correcciones Report PDF Billing N4 y revisión servicios de pesada."
+      }
+    ],
+    "trackers_details": [...],
+    "conclusions": [...]
+  },
+  "output_filename": "Resumen_Ejecutivo_Septiembre_2026.docx"
 }
 ```
 

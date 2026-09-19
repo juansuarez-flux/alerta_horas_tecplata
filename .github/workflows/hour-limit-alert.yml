@@ -1,0 +1,42 @@
+name: Alerta consumo de horas Soporte L3
+
+on:
+  schedule:
+    # Todos los días a las 12:00 UTC (09:00 Argentina)
+    - cron: '0 12 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  check-hours:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci
+
+      - name: Check hour consumption
+        env:
+          REDMINE_URL: ${{ secrets.REDMINE_URL }}
+          REDMINE_API_KEY: ${{ secrets.REDMINE_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          ALERT_EMAIL_TO: juan.suarez@fluxit.com.ar
+        run: node scripts/checkHourLimitAlert.js
+
+      - name: Commit estado de alertas actualizado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/hour-alert-state.json
+          git diff --cached --quiet || git commit -m "chore: update hour alert state [skip ci]"
+          git push

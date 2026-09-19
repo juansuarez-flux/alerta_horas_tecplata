@@ -11,7 +11,7 @@
  *   node server.js
  */
 
-
+import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -33,7 +33,9 @@ import * as planSprint from './tools/planSprint.js';
 import * as updateIssue from './tools/updateIssue.js';
 import * as getProjectMembers from './tools/getProjectMembers.js';
 import * as getTimeEntries from './tools/getTimeEntries.js';
-
+import * as generateExecutiveReport from './tools/generateExecutiveReport.js';
+import * as getExecutiveReportData from './tools/getExecutiveReportData.js';
+import * as compileExecutiveReportDocx from './tools/compileExecutiveReportDocx.js';
 
 // New advanced tools
 import * as burndownData from './tools/burndown_data.js';
@@ -60,6 +62,8 @@ const TOOLS = [
   updateIssue,
   getProjectMembers,
   getTimeEntries,
+  getExecutiveReportData,
+  compileExecutiveReportDocx,
 ];
 
 const toolMap = new Map(TOOLS.map((t) => [t.definition.name, t.handler]));
