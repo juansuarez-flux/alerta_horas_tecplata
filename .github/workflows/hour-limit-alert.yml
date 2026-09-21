@@ -30,7 +30,7 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          ALERT_EMAIL_TO: juan.suarez@fluxit.com.ar
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
         run: node scripts/checkHourLimitAlert.js
 
       - name: Commit estado de alertas actualizado
