@@ -305,6 +305,21 @@ Automates the creation of consolidated executive Word reports (`.docx`) from Red
 
 ---
 
+## Automated Executive Hour Limit Email Alerts (`scripts/checkHourLimitAlert.js`)
+
+The project includes an automated daily monitoring script designed to run via **GitHub Actions** (`.github/workflows/hour-limit-alert.yml`):
+
+- **Purpose:** Monitors monthly hours consumption for Soporte L3 (`Requerimientos` + `Tareas`).
+- **Threshold Alerts:** Triggers HTML email alerts when reaching defined thresholds (e.g. `40hs` and `45hs` out of a `50hs` monthly limit).
+- **Executive HTML Format:** Sends an HTML email featuring:
+  - **Métricas Generales:** Total hours, items worked, professionals involved.
+  - **Distribución por Profesional:** Breakdown table with hours and dedication percentages.
+  - **Distribución por Actividad:** Breakdown table by activity type.
+  - **Ítems Destacados:** Highlighted list of tasks, current status, hours, and clean progress notes.
+- **Manual Trigger:** Supports `--force` flag to send executive email reports on demand (e.g., `node scripts/checkHourLimitAlert.js --force`).
+
+---
+
 ## MCP Client Configuration
 
 Standard MCP configuration applies for Claude Desktop, Cursor, and Antigravity. Refer to the specific client documentation for adding the server via `node server.js`.
