@@ -39,7 +39,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add state/hour-alert-state.json
+          git add state/hour-alert-state.json || true
           git diff --cached --quiet || git commit -m "chore: update hour alert state [skip ci]"
-          git push origin main
+          git push origin main || echo "Sin cambios para publicar"
+
 
