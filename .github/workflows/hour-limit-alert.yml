@@ -33,7 +33,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
-        run: node scripts/checkHourLimitAlert.js
+        run: node scripts/checkHourLimitAlert.js ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
 
       - name: Commit estado de alertas actualizado
         run: |

@@ -242,6 +242,13 @@ async function run() {
   const { from, to } = monthRange();
   const monthKey = currentMonthKey();
 
+  if (process.env.REDMINE_API_KEY) {
+    process.env.REDMINE_API_KEY = process.env.REDMINE_API_KEY.trim();
+  }
+  if (process.env.REDMINE_URL) {
+    process.env.REDMINE_URL = process.env.REDMINE_URL.trim();
+  }
+
   console.log(`[${monthKey}] Extrayendo datos consolidados del (${from} a ${to})...`);
 
   // Extraer información consolidada de los proyectos
